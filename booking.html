@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>預約諮詢 - 克卜勒獵才</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #5B82DB 0%, #3B5998 100%); }
+    .card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .date-tab { padding: 10px 4px; border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.2s; min-width: 56px; }
+    .date-tab.active { background: #5B82DB; color: white; }
+    .date-tab:not(.active) { background: #f1f5f9; }
+    .time-slot { padding: 10px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; cursor: pointer; text-align: center; transition: all 0.2s; font-size: 14px; }
+    .time-slot.available:hover { border-color: #5B82DB; background: #f0f4ff; }
+    .time-slot.selected { background: #5B82DB; color: white; border-color: #5B82DB; }
+    .time-slot.booked { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; text-decoration: line-through; }
+    .btn-submit { background: linear-gradient(135deg, #5B82DB 0%, #3B5998 100%); transition: transform 0.15s, box-shadow 0.15s; }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(91,130,219,0.4); }
+    .btn-submit:disabled { opacity: 0.6; transform: none; box-shadow: none; }
+    .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Header -->
+  <div class="gradient-bg text-white px-5 pt-10 pb-8">
+    <div class="flex items-center gap-3 mb-1">
+      <img id="profilePic" src="" alt="" class="w-12 h-12 rounded-full border-2 border-white/30 hidden">
+      <div>
+        <h1 class="text-xl font-bold">預約免費諮詢</h1>
+        <p id="greeting" class="text-sm text-white/80">30 分鐘一對一職涯諮詢</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="px-4 -mt-4">
+
+    <!-- Info Card -->
+    <div class="card p-4 mb-4">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm text-gray-700 font-medium">諮詢內容包含</p>
+          <p class="text-xs text-gray-500 mt-1">職涯規劃、履歷健檢、面試準備、薪資談判、產業趨勢分析</p>
+          <p class="text-xs text-blue-500 mt-1 font-medium">線上視訊（Google Meet）| 30 分鐘 | 完全免費</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date Selection -->
+    <div class="card p-4 mb-4">
+      <h2 class="text-base font-bold text-gray-800 mb-3">選擇日期</h2>
+      <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2"></div>
+    </div>
+
+    <!-- Time Selection -->
+    <div class="card p-4 mb-4">
+      <h2 class="text-base font-bold text-gray-800 mb-3">選擇時段</h2>
+      <div id="timeContainer" class="grid grid-cols-3 gap-2"></div>
+      <p id="noSlots" class="hidden text-sm text-gray-400 text-center py-4">該日無可用時段</p>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="card p-4 mb-4">
+      <h2 class="text-base font-bold text-gray-800 mb-3">聯繫資訊</h2>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">姓名 <span class="text-red-400">*</span></label>
+          <input type="text" id="bookingName" required placeholder="請輸入您的姓名"
+            class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-400">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">手機號碼 <span class="text-red-400">*</span></label>
+          <input type="tel" id="bookingPhone" required placeholder="0912-345-678"
+            class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-400">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">想聊什麼？</label>
+          <select id="bookingTopic" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
+            <option value="職涯規劃">職涯規劃與轉職建議</option>
+            <option value="履歷健檢">履歷健檢與優化</option>
+            <option value="面試準備">面試準備與模擬</option>
+            <option value="薪資談判">薪資談判策略</option>
+            <option value="市場趨勢">產業趨勢與市場分析</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button id="submitBtn" onclick="submitBooking()" disabled
+      class="btn-submit w-full py-3 text-white font-bold rounded-xl text-base mb-2">
+      確認預約
+    </button>
+    <p class="text-xs text-gray-400 text-center mb-8">預約成功後將收到 LINE 確認訊息與 Google Meet 連結</p>
+  </div>
+
+  <!-- Success Screen -->
+  <div id="successScreen" class="hidden fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="text-center px-8">
+      <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">預約成功！</h2>
+      <p id="bookingSummary" class="text-gray-500 mb-2"></p>
+      <p class="text-sm text-gray-400 mb-6">我們會透過 LINE 發送確認訊息與 Google Meet 連結給您</p>
+      <button onclick="closeLiff()" class="btn-submit px-8 py-3 text-white font-bold rounded-xl">
+        返回聊天室
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // === CONFIG ===
+    const LIFF_ID = '2009725933-XYgErrzf';
+    const WEBHOOK_URL = 'https://para-sudden-utc-gloves.trycloudflare.com/webhook/liff-booking';
+
+    let lineProfile = null;
+    let selectedDate = null;
+    let selectedTime = null;
+
+    // Simulated booked slots (will be replaced by real data from n8n/Google Calendar)
+    const bookedSlots = {};
+
+    // Available time slots
+    const timeSlots = [
+      '10:00', '10:30', '11:00', '11:30',
+      '14:00', '14:30', '15:00', '15:30',
+      '16:00', '16:30', '17:00', '17:30'
+    ];
+
+    // === LIFF Init ===
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+        lineProfile = await liff.getProfile();
+        document.getElementById('profilePic').src = lineProfile.pictureUrl;
+        document.getElementById('profilePic').classList.remove('hidden');
+        document.getElementById('greeting').textContent = `${lineProfile.displayName}，選擇方便的時段`;
+      } catch (e) {
+        console.log('LIFF init error (dev mode):', e);
+      }
+    }
+
+    // === Generate Dates (next 7 days, skip weekends) ===
+    function generateDates() {
+      const container = document.getElementById('dateContainer');
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+      const dates = [];
+      let d = new Date();
+      d.setDate(d.getDate() + 1); // Start from tomorrow
+
+      while (dates.length < 7) {
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) { // Skip weekends
+          dates.push(new Date(d));
+        }
+        d.setDate(d.getDate() + 1);
+      }
+
+      dates.forEach((date, i) => {
+        const dateStr = formatDate(date);
+        const tab = document.createElement('div');
+        tab.className = `date-tab ${i === 0 ? 'active' : ''}`;
+        tab.innerHTML = `
+          <div class="text-xs opacity-70">${weekdays[date.getDay()]}</div>
+          <div class="text-lg font-bold">${date.getDate()}</div>
+          <div class="text-xs opacity-70">${date.getMonth() + 1}月</div>
+        `;
+        tab.onclick = () => selectDate(dateStr, tab);
+        container.appendChild(tab);
+      });
+
+      selectDate(formatDate(dates[0]), container.firstChild);
+    }
+
+    function formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function selectDate(dateStr, tab) {
+      selectedDate = dateStr;
+      selectedTime = null;
+      updateSubmitBtn();
+
+      document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      renderTimeSlots(dateStr);
+    }
+
+    function renderTimeSlots(dateStr) {
+      const container = document.getElementById('timeContainer');
+      const noSlots = document.getElementById('noSlots');
+      container.innerHTML = '';
+
+      const booked = bookedSlots[dateStr] || [];
+
+      timeSlots.forEach(time => {
+        const slot = document.createElement('div');
+        const isBooked = booked.includes(time);
+        slot.className = `time-slot ${isBooked ? 'booked' : 'available'}`;
+        slot.textContent = time;
+
+        if (!isBooked) {
+          slot.onclick = () => {
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            slot.classList.add('selected');
+            selectedTime = time;
+            updateSubmitBtn();
+          };
+        }
+        container.appendChild(slot);
+      });
+
+      noSlots.classList.add('hidden');
+    }
+
+    function updateSubmitBtn() {
+      const name = document.getElementById('bookingName').value.trim();
+      const phone = document.getElementById('bookingPhone').value.trim();
+      document.getElementById('submitBtn').disabled = !(selectedDate && selectedTime && name && phone);
+    }
+
+    // Listen for input changes
+    ['bookingName', 'bookingPhone'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateSubmitBtn);
+    });
+
+    // === Submit Booking ===
+    async function submitBooking() {
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> 預約中...';
+
+      const data = {
+        source: 'liff-booking',
+        lineUserId: lineProfile ? lineProfile.userId : '',
+        lineDisplayName: lineProfile ? lineProfile.displayName : '',
+        name: document.getElementById('bookingName').value.trim(),
+        phone: document.getElementById('bookingPhone').value.trim(),
+        topic: document.getElementById('bookingTopic').value,
+        date: selectedDate,
+        time: selectedTime,
+        submittedAt: new Date().toISOString()
+      };
+
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        document.getElementById('bookingSummary').textContent =
+          `${selectedDate} ${selectedTime}（${data.topic}）`;
+        document.getElementById('successScreen').classList.remove('hidden');
+      } catch (err) {
+        alert('預約失敗，請稍後再試');
+        btn.disabled = false;
+        btn.textContent = '確認預約';
+      }
+    }
+
+    function closeLiff() {
+      if (liff.isInClient()) {
+        liff.closeWindow();
+      } else {
+        window.close();
+      }
+    }
+
+    // === Init ===
+    generateDates();
+    initLiff();
+  </script>
+</body>
+</html>
