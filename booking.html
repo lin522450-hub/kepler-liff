@@ -141,6 +141,8 @@
       '16:00', '16:30', '17:00', '17:30'
     ];
 
+    let isSubmitting = false; // dedup protection
+
     // === LIFF Init ===
     async function initLiff() {
       try {
@@ -153,8 +155,14 @@
         document.getElementById('profilePic').src = lineProfile.pictureUrl;
         document.getElementById('profilePic').classList.remove('hidden');
         document.getElementById('greeting').textContent = `${lineProfile.displayName}，選擇方便的時段`;
+        // Auto-fill name from LINE profile
+        const nameInput = document.getElementById('bookingName');
+        if (!nameInput.value) nameInput.value = lineProfile.displayName;
+        updateSubmitBtn();
       } catch (e) {
-        console.log('LIFF init error (dev mode):', e);
+        console.error('LIFF init failed:', e);
+        // Show warning but allow form to work without LINE profile
+        document.getElementById('greeting').textContent = '30 分鐘一對一職涯諮詢（離線模式）';
       }
     }
 
@@ -235,10 +243,34 @@
       noSlots.classList.add('hidden');
     }
 
+    // Phone validation
+    function isValidPhone(phone) {
+      return /^09\d{2}-?\d{3}-?\d{3}$/.test(phone);
+    }
+
+    function showFieldError(id, msg) {
+      const el = document.getElementById(id);
+      let err = el.parentElement.querySelector('.field-error');
+      if (!err) {
+        err = document.createElement('p');
+        err.className = 'field-error text-xs text-red-500 mt-1';
+        el.parentElement.appendChild(err);
+      }
+      err.textContent = msg;
+    }
+    function clearFieldError(id) {
+      const el = document.getElementById(id);
+      const err = el.parentElement.querySelector('.field-error');
+      if (err) err.remove();
+    }
+
     function updateSubmitBtn() {
       const name = document.getElementById('bookingName').value.trim();
       const phone = document.getElementById('bookingPhone').value.trim();
-      document.getElementById('submitBtn').disabled = !(selectedDate && selectedTime && name && phone);
+      // Clear errors on input
+      if (name) clearFieldError('bookingName');
+      if (phone && isValidPhone(phone)) clearFieldError('bookingPhone');
+      document.getElementById('submitBtn').disabled = !(selectedDate && selectedTime && name && phone && isValidPhone(phone));
     }
 
     // Listen for input changes
@@ -248,16 +280,28 @@
 
     // === Submit Booking ===
     async function submitBooking() {
+      // Validation
+      const name = document.getElementById('bookingName').value.trim();
+      const phone = document.getElementById('bookingPhone').value.trim();
+      if (!name) { showFieldError('bookingName', '請輸入姓名'); return; }
+      if (!isValidPhone(phone)) { showFieldError('bookingPhone', '請輸入正確手機格式（09xx-xxx-xxx）'); return; }
+
+      // Dedup protection
+      if (isSubmitting) return;
+      isSubmitting = true;
+
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="loading"></span> 預約中...';
 
+      const bookingId = `BK-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
       const data = {
         source: 'liff-booking',
+        bookingId: bookingId,
         lineUserId: lineProfile ? lineProfile.userId : '',
         lineDisplayName: lineProfile ? lineProfile.displayName : '',
-        name: document.getElementById('bookingName').value.trim(),
-        phone: document.getElementById('bookingPhone').value.trim(),
+        name: name,
+        phone: phone,
         topic: document.getElementById('bookingTopic').value,
         date: selectedDate,
         time: selectedTime,
@@ -265,19 +309,22 @@
       };
 
       try {
-        await fetch(WEBHOOK_URL, {
+        const resp = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
         document.getElementById('bookingSummary').textContent =
           `${selectedDate} ${selectedTime}（${data.topic}）`;
         document.getElementById('successScreen').classList.remove('hidden');
       } catch (err) {
-        alert('預約失敗，請稍後再試');
+        console.error('Booking submit error:', err);
+        alert('預約失敗，請檢查網路連線後再試一次');
         btn.disabled = false;
         btn.textContent = '確認預約';
+        isSubmitting = false;
       }
     }
 

@@ -211,6 +211,27 @@
 
     let lineProfile = null;
 
+    let isSubmitting = false; // dedup protection
+
+    // === Validation ===
+    function isValidPhone(phone) {
+      return /^09\d{2}-?\d{3}-?\d{3}$/.test(phone);
+    }
+    function isValidEmail(email) {
+      return !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+    function showFieldError(id, msg) {
+      const el = document.getElementById(id);
+      let err = el.parentElement.querySelector('.field-error');
+      if (!err) { err = document.createElement('p'); err.className = 'field-error text-xs text-red-500 mt-1'; el.parentElement.appendChild(err); }
+      err.textContent = msg;
+    }
+    function clearFieldError(id) {
+      const el = document.getElementById(id);
+      const err = el.parentElement.querySelector('.field-error');
+      if (err) err.remove();
+    }
+
     // === LIFF Init ===
     async function initLiff() {
       try {
@@ -223,8 +244,12 @@
         document.getElementById('profilePic').src = lineProfile.pictureUrl;
         document.getElementById('profilePic').classList.remove('hidden');
         document.getElementById('greeting').textContent = `${lineProfile.displayName}，讓我們為您媒合最適合的職缺`;
+        // Auto-fill name from LINE profile
+        const nameInput = document.getElementById('name');
+        if (!nameInput.value) nameInput.value = lineProfile.displayName;
       } catch (e) {
-        console.log('LIFF init error (dev mode):', e);
+        console.error('LIFF init failed:', e);
+        document.getElementById('greeting').textContent = '讓我們為您媒合最適合的職缺（離線模式）';
       }
     }
 
@@ -241,22 +266,51 @@
     // === Form Submit ===
     document.getElementById('candidateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      // Validation
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      let hasError = false;
+
+      if (!isValidPhone(phone)) {
+        showFieldError('phone', '請輸入正確手機格式（09xx-xxx-xxx）');
+        hasError = true;
+      } else { clearFieldError('phone'); }
+
+      if (!isValidEmail(email)) {
+        showFieldError('email', '請輸入正確 Email 格式');
+        hasError = true;
+      } else { clearFieldError('email'); }
+
+      const jobTypes = getSelectedChips('jobTypes');
+      if (jobTypes.length === 0) {
+        showFieldError('jobTypes', '請至少選擇一項期望職位類型');
+        hasError = true;
+      } else { clearFieldError('jobTypes'); }
+
+      if (hasError) return;
+
+      // Dedup protection
+      if (isSubmitting) return;
+      isSubmitting = true;
+
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="loading"></span> 送出中...';
 
       const data = {
         source: 'liff-candidate-form',
+        formId: `CF-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
         lineUserId: lineProfile ? lineProfile.userId : '',
         lineDisplayName: lineProfile ? lineProfile.displayName : '',
         linePicture: lineProfile ? lineProfile.pictureUrl : '',
         name: document.getElementById('name').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        email: document.getElementById('email').value.trim(),
+        phone: phone,
+        email: email,
         company: document.getElementById('company').value.trim(),
         title: document.getElementById('title').value.trim(),
         experience: document.getElementById('experience').value,
-        jobTypes: getSelectedChips('jobTypes'),
+        jobTypes: jobTypes,
         industries: getSelectedChips('industries'),
         currentSalary: document.getElementById('currentSalary').value,
         expectedSalary: document.getElementById('expectedSalary').value,
@@ -265,16 +319,19 @@
       };
 
       try {
-        await fetch(WEBHOOK_URL, {
+        const resp = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         document.getElementById('successScreen').classList.remove('hidden');
       } catch (err) {
-        alert('送出失敗，請稍後再試');
+        console.error('Form submit error:', err);
+        alert('送出失敗，請檢查網路連線後再試一次');
         btn.disabled = false;
         btn.textContent = '送出資料';
+        isSubmitting = false;
       }
     });
 
