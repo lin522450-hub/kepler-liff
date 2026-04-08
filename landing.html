@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>克卜勒獵才 Kepler Talent｜您的專屬職涯顧問</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: #333; }
+    .hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 60px 20px 80px; text-align: center; position: relative; overflow: hidden; }
+    .hero::after { content: ''; position: absolute; bottom: -30px; left: 0; right: 0; height: 60px; background: #f8f9fa; border-radius: 50% 50% 0 0; }
+    .hero h1 { font-size: 2em; margin-bottom: 10px; letter-spacing: 2px; }
+    .hero .subtitle { font-size: 1.1em; opacity: 0.9; margin-bottom: 30px; }
+    .hero .tagline { display: inline-block; background: rgba(255,255,255,0.15); padding: 8px 20px; border-radius: 20px; font-size: 0.9em; }
+    .container { max-width: 600px; margin: 0 auto; padding: 0 20px; }
+    .stats { display: flex; justify-content: center; gap: 30px; margin: 40px 0; }
+    .stat { text-align: center; }
+    .stat .num { font-size: 2em; font-weight: bold; color: #0f3460; }
+    .stat .label { font-size: 0.85em; color: #666; margin-top: 5px; }
+    .services { margin: 40px 0; }
+    .services h2 { text-align: center; font-size: 1.5em; margin-bottom: 25px; color: #1a1a2e; }
+    .service-card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: flex-start; gap: 15px; }
+    .service-icon { font-size: 2em; flex-shrink: 0; }
+    .service-info h3 { font-size: 1.1em; margin-bottom: 5px; }
+    .service-info p { font-size: 0.9em; color: #666; line-height: 1.5; }
+    .qr-section { text-align: center; margin: 50px 0; padding: 40px 20px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .qr-section h2 { font-size: 1.4em; margin-bottom: 10px; color: #1a1a2e; }
+    .qr-section .hint { color: #666; font-size: 0.9em; margin-bottom: 25px; }
+    .qr-code { width: 200px; height: 200px; margin: 0 auto 20px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .qr-code img { width: 100%; height: 100%; border-radius: 8px; }
+    .line-btn { display: inline-block; background: #06C755; color: white; text-decoration: none; padding: 14px 40px; border-radius: 8px; font-size: 1.1em; font-weight: bold; margin-top: 15px; transition: background 0.2s; }
+    .line-btn:hover { background: #05b04c; }
+    .testimonials { margin: 40px 0; }
+    .testimonials h2 { text-align: center; font-size: 1.4em; margin-bottom: 25px; color: #1a1a2e; }
+    .testimonial { background: white; border-radius: 12px; padding: 20px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .testimonial .quote { font-style: italic; color: #555; line-height: 1.6; margin-bottom: 10px; }
+    .testimonial .author { font-size: 0.85em; color: #999; }
+    .footer { text-align: center; padding: 30px 20px; color: #999; font-size: 0.85em; }
+    .utm-info { display: none; }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.5em; }
+      .stats { gap: 15px; }
+      .stat .num { font-size: 1.5em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>克卜勒獵才 Kepler Talent</h1>
+    <p class="subtitle">您的專屬職涯顧問</p>
+    <span class="tagline">科技業高階人才媒合 ｜ 免費職涯諮詢</span>
+  </div>
+
+  <div class="container">
+    <div class="stats">
+      <div class="stat"><div class="num">500+</div><div class="label">合作企業</div></div>
+      <div class="stat"><div class="num">3000+</div><div class="label">成功媒合</div></div>
+      <div class="stat"><div class="num">95%</div><div class="label">滿意度</div></div>
+    </div>
+
+    <div class="services">
+      <h2>我們的服務</h2>
+      <div class="service-card">
+        <div class="service-icon">💼</div>
+        <div class="service-info">
+          <h3>精準職缺推薦</h3>
+          <p>AI 驅動的職缺匹配系統，根據您的背景與期望，推薦最適合的高薪機會。</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📋</div>
+        <div class="service-info">
+          <h3>免費履歷健檢</h3>
+          <p>專業顧問一對一審閱您的履歷，提供具體優化建議，提升面試邀約率。</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📅</div>
+        <div class="service-info">
+          <h3>30分鐘免費諮詢</h3>
+          <p>線上視訊即可完成，涵蓋職涯規劃、薪資談判、面試準備等主題。</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📊</div>
+        <div class="service-info">
+          <h3>薪資行情分析</h3>
+          <p>最新 2026 台灣科技業薪資數據，幫助您了解自己的市場價值。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="qr-section">
+      <h2>加入 LINE 好友</h2>
+      <p class="hint">掃描 QR Code 或點擊按鈕，立即開始</p>
+      <div class="qr-code">
+        <img src="https://qr-official.line.me/gs/M_559slbhi_GW.png?oat_content=qr" alt="LINE QR Code" onerror="this.parentElement.innerHTML='<div style=&quot;color:#999;font-size:14px&quot;>LINE QR Code<br>@559slbhi</div>'">
+      </div>
+      <a href="https://lin.ee/placeholder" class="line-btn" id="lineAddBtn">加入好友</a>
+    </div>
+
+    <div class="testimonials">
+      <h2>成功案例</h2>
+      <div class="testimonial">
+        <p class="quote">「透過克卜勒獵才，我在兩週內就拿到了夢想公司的 offer，薪資還比預期多了 20%！」</p>
+        <p class="author">— Kevin，資深後端工程師，轉職 AI 新創</p>
+      </div>
+      <div class="testimonial">
+        <p class="quote">「顧問不只幫我找到好工作，還教我如何談判薪資，這是其他人力銀行做不到的。」</p>
+        <p class="author">— Sarah，產品經理，年薪提升 30%</p>
+      </div>
+      <div class="testimonial">
+        <p class="quote">「免費的履歷健檢讓我的面試邀約率翻倍，強烈推薦給所有轉職中的朋友。」</p>
+        <p class="author">— David，UI/UX 設計師</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2026 克卜勒獵才 Kepler Talent. All rights reserved.</p>
+    <p style="margin-top:5px">科技業高階人才媒合專家</p>
+  </div>
+
+  <script>
+    // UTM tracking
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get('utm_source') || 'direct';
+    const utmMedium = params.get('utm_medium') || 'none';
+    const utmCampaign = params.get('utm_campaign') || 'none';
+
+    // Append UTM to LINE add friend link
+    const lineBtn = document.getElementById('lineAddBtn');
+    const baseLineUrl = 'https://line.me/R/ti/p/@559slbhi';
+    lineBtn.href = baseLineUrl;
+
+    // Track page view via webhook (non-blocking)
+    try {
+      fetch('https://luke-inns-prep-ind.trycloudflare.com/webhook/interaction-log', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          lineUserId: 'LANDING_' + utmSource,
+          name: 'Landing Page Visitor',
+          eventType: 'landing_page_view',
+          content: utmSource + '/' + utmMedium + '/' + utmCampaign,
+          response: navigator.userAgent.substring(0, 100),
+          source: 'landing_page',
+          score: 0,
+          notes: window.location.href
+        })
+      }).catch(()=>{});
+    } catch(e) {}
+  </script>
+</body>
+</html>
