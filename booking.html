@@ -131,8 +131,26 @@
     let selectedDate = null;
     let selectedTime = null;
 
-    // Simulated booked slots (will be replaced by real data from n8n/Google Calendar)
-    const bookedSlots = {};
+    // Booked slots from Google Calendar (loaded dynamically)
+    let bookedSlots = {};
+
+    // Fetch booked slots from Calendar FreeBusy API
+    async function loadBookedSlots() {
+      try {
+        const freeBusyUrl = WEBHOOK_URL.replace('/webhook/liff-booking', '/webhook/calendar-freebusy');
+        const resp = await fetch(freeBusyUrl);
+        if (resp.ok) {
+          const data = await resp.json();
+          bookedSlots = data.bookedSlots || data[0]?.bookedSlots || {};
+          // Re-render current date's time slots
+          if (selectedDate) {
+            renderTimeSlots(selectedDate);
+          }
+        }
+      } catch(e) {
+        console.log('FreeBusy load failed (using empty):', e);
+      }
+    }
 
     // Available time slots
     const timeSlots = [
@@ -339,6 +357,7 @@
     // === Init ===
     generateDates();
     initLiff();
+    loadBookedSlots();
   </script>
 </body>
 </html>
