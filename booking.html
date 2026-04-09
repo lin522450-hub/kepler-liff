@@ -372,8 +372,7 @@
 
     // === Init ===
     generateDates();
-    initLiff();
-    loadBookedSlots();
+    initLiff().then(() => loadBookedSlots());
   </script>
 </body>
 </html>
