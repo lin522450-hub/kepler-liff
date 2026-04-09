@@ -138,7 +138,9 @@
     async function loadBookedSlots() {
       try {
         const freeBusyUrl = WEBHOOK_URL.replace('/webhook/liff-booking', '/webhook/calendar-freebusy');
-        const resp = await fetch(freeBusyUrl);
+        const resp = await fetch(freeBusyUrl, {
+          headers: {'x-api-key': 'iAHKVIPrUkLofrLgVpi9kN4gu2oQ9CjOAWQtwhbeD7k'}
+        });
         if (resp.ok) {
           const data = await resp.json();
           bookedSlots = data.bookedSlots || data[0]?.bookedSlots || {};
