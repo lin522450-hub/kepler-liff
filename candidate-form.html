@@ -19,6 +19,13 @@
     .btn-submit:disabled { opacity: 0.6; transform: none; box-shadow: none; }
     .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .date-tab { padding: 10px 4px; border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.2s; min-width: 56px; }
+    .date-tab.active { background: #667eea; color: white; }
+    .date-tab:not(.active) { background: #f1f5f9; }
+    .time-slot { padding: 10px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; cursor: pointer; text-align: center; transition: all 0.2s; font-size: 14px; }
+    .time-slot.available:hover { border-color: #667eea; background: #f0f4ff; }
+    .time-slot.selected { background: #667eea; color: white; border-color: #667eea; }
+    .time-slot.booked { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; text-decoration: line-through; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -177,6 +184,39 @@
           class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none resize-none"></textarea>
       </div>
 
+      <!-- 預約諮詢（可選） -->
+      <div>
+        <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold">5</span>
+          預約免費諮詢
+          <span class="text-xs font-normal text-gray-400 ml-1">（選填）</span>
+        </h2>
+        <p class="text-xs text-gray-500 mb-3">線上視訊（Google Meet）| 30 分鐘 | 完全免費</p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-2">選擇日期</label>
+            <div id="dateContainer" class="flex gap-2 overflow-x-auto pb-2"></div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-2">選擇時段</label>
+            <div id="timeContainer" class="grid grid-cols-3 gap-2"></div>
+            <p id="noSlots" class="hidden text-sm text-gray-400 text-center py-4">該日無可用時段</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">想聊什麼？</label>
+            <select id="bookingTopic" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
+              <option value="職涯規劃">職涯規劃與轉職建議</option>
+              <option value="履歷健檢">履歷健檢與優化</option>
+              <option value="面試準備">面試準備與模擬</option>
+              <option value="薪資談判">薪資談判策略</option>
+              <option value="市場趨勢">產業趨勢與市場分析</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- Submit -->
       <button type="submit" id="submitBtn"
         class="btn-submit w-full py-3 text-white font-bold rounded-xl text-base">
@@ -195,7 +235,7 @@
         </svg>
       </div>
       <h2 class="text-xl font-bold text-gray-800 mb-2">資料已送出！</h2>
-      <p class="text-gray-500 mb-6">我們的顧問會在 1-2 個工作天內與您聯繫，為您推薦最適合的職缺。</p>
+      <p id="successMsg" class="text-gray-500 mb-6"></p>
       <button onclick="closeLiff()" class="btn-submit px-8 py-3 text-white font-bold rounded-xl">
         返回聊天室
       </button>
@@ -210,6 +250,9 @@
     const WEBHOOK_URL = 'https://unsuppressible-loriann-undeliciously.ngrok-free.dev/webhook/liff-candidate';
 
     let lineProfile = null;
+    let selectedDate = null;
+    let selectedTime = null;
+    let bookedSlots = {};
 
     let isSubmitting = false; // dedup protection
 
@@ -251,6 +294,94 @@
         console.error('LIFF init failed:', e);
         document.getElementById('greeting').textContent = '讓我們為您媒合最適合的職缺（離線模式）';
       }
+    }
+
+    // === Calendar FreeBusy ===
+    const BOOKING_WEBHOOK = 'https://unsuppressible-loriann-undeliciously.ngrok-free.dev/webhook/liff-booking';
+
+    async function loadBookedSlots() {
+      try {
+        let freeBusyUrl = BOOKING_WEBHOOK.replace('/webhook/liff-booking', '/webhook/calendar-freebusy');
+        if (lineProfile && lineProfile.userId) {
+          freeBusyUrl += '?userId=' + encodeURIComponent(lineProfile.userId);
+        }
+        const resp = await fetch(freeBusyUrl, {
+          headers: {'x-api-key': 'iAHKVIPrUkLofrLgVpi9kN4gu2oQ9CjOAWQtwhbeD7k'}
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const d = Array.isArray(data) ? data[0] : data;
+          bookedSlots = d.bookedSlots || {};
+          // Auto-fill from previous data
+          if (d.userInfo) {
+            const phoneInput = document.getElementById('phone');
+            if (d.userInfo.phone && !phoneInput.value) phoneInput.value = d.userInfo.phone;
+          }
+          if (selectedDate) renderTimeSlots(selectedDate);
+        }
+      } catch(e) {
+        console.log('FreeBusy load failed:', e);
+      }
+    }
+
+    const timeSlots = [
+      '10:00', '10:30', '11:00', '11:30',
+      '14:00', '14:30', '15:00', '15:30',
+      '16:00', '16:30', '17:00', '17:30'
+    ];
+
+    function generateDates() {
+      const container = document.getElementById('dateContainer');
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+      const dates = [];
+      let d = new Date();
+      d.setDate(d.getDate() + 1);
+      while (dates.length < 7) {
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) dates.push(new Date(d));
+        d.setDate(d.getDate() + 1);
+      }
+      dates.forEach((date, i) => {
+        const dateStr = formatDate(date);
+        const tab = document.createElement('div');
+        tab.className = 'date-tab' + (i === 0 ? ' active' : '');
+        tab.innerHTML = '<div class="text-xs opacity-70">' + weekdays[date.getDay()] + '</div><div class="text-lg font-bold">' + date.getDate() + '</div><div class="text-xs opacity-70">' + (date.getMonth()+1) + '月</div>';
+        tab.onclick = () => selectDate(dateStr, tab);
+        container.appendChild(tab);
+      });
+      selectDate(formatDate(dates[0]), container.firstChild);
+    }
+
+    function formatDate(date) {
+      return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+    }
+
+    function selectDate(dateStr, tab) {
+      selectedDate = dateStr;
+      selectedTime = null;
+      document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderTimeSlots(dateStr);
+    }
+
+    function renderTimeSlots(dateStr) {
+      const container = document.getElementById('timeContainer');
+      container.innerHTML = '';
+      const booked = bookedSlots[dateStr] || [];
+      timeSlots.forEach(time => {
+        const slot = document.createElement('div');
+        const isBooked = booked.includes(time);
+        slot.className = 'time-slot ' + (isBooked ? 'booked' : 'available');
+        slot.textContent = time;
+        if (!isBooked) {
+          slot.onclick = () => {
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            slot.classList.add('selected');
+            selectedTime = time;
+          };
+        }
+        container.appendChild(slot);
+      });
     }
 
     // === Chip Selection ===
@@ -318,6 +449,14 @@
         submittedAt: new Date().toISOString()
       };
 
+        // Add booking info if date/time selected
+        data.hasBooking = !!(selectedDate && selectedTime);
+        if (data.hasBooking) {
+          data.bookingDate = selectedDate;
+          data.bookingTime = selectedTime;
+          data.bookingTopic = document.getElementById('bookingTopic').value;
+        }
+
       try {
         const resp = await fetch(WEBHOOK_URL, {
           method: 'POST',
@@ -325,6 +464,11 @@
           body: JSON.stringify(data)
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        let successText = '我們的顧問會在 1-2 個工作天內與您聯繫，為您推薦最適合的職缺。';
+        if (data.hasBooking) {
+          successText = '您已預約 ' + selectedDate + ' ' + selectedTime + ' 的免費諮詢。\n我們會透過 LINE 發送確認訊息與 Google Meet 連結給您。';
+        }
+        document.getElementById('successMsg').textContent = successText;
         document.getElementById('successScreen').classList.remove('hidden');
       } catch (err) {
         console.error('Form submit error:', err);
@@ -343,7 +487,8 @@
       }
     }
 
-    initLiff();
+    generateDates();
+    initLiff().then(() => loadBookedSlots());
   </script>
 </body>
 </html>
