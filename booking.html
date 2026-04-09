@@ -175,9 +175,31 @@
         document.getElementById('profilePic').src = lineProfile.pictureUrl;
         document.getElementById('profilePic').classList.remove('hidden');
         document.getElementById('greeting').textContent = `${lineProfile.displayName}，選擇方便的時段`;
-        // Auto-fill name from LINE profile
+        // Auto-fill from localStorage first (instant)
         const nameInput = document.getElementById('bookingName');
+        const phoneInput = document.getElementById('bookingPhone');
+        const savedName = localStorage.getItem('kp_name');
+        const savedPhone = localStorage.getItem('kp_phone');
+        if (savedName) nameInput.value = savedName;
+        if (savedPhone) phoneInput.value = savedPhone;
+        // Fallback: fill name from LINE profile if still empty
         if (!nameInput.value) nameInput.value = lineProfile.displayName;
+        // If no local cache, try to fetch from previous booking records
+        if (!savedPhone && lineProfile.userId) {
+          try {
+            const luUrl = WEBHOOK_URL.replace('/webhook/liff-booking', '/webhook/admin-api');
+            const luResp = await fetch(luUrl, { method:'POST', headers:{'Content-Type':'application/json','x-api-key':'iAHKVIPrUkLofrLgVpi9kN4gu2oQ9CjOAWQtwhbeD7k'}, body: JSON.stringify({action:'lookup_user_info',lineUserId:lineProfile.userId}) });
+            if (luResp.ok) {
+              const luData = await luResp.json();
+              const lu = Array.isArray(luData) ? luData[0] : luData;
+              if (lu.success) {
+                if (lu.name && !nameInput.value) nameInput.value = lu.name;
+                if (lu.phone) { phoneInput.value = lu.phone; localStorage.setItem('kp_phone', lu.phone); }
+                if (lu.name) localStorage.setItem('kp_name', lu.name);
+              }
+            }
+          } catch(e) {}
+        }
         updateSubmitBtn();
       } catch (e) {
         console.error('LIFF init failed:', e);
@@ -335,6 +357,10 @@
           body: JSON.stringify(data)
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        // Save for next time auto-fill
+        localStorage.setItem('kp_name', name);
+        localStorage.setItem('kp_phone', phone);
 
         document.getElementById('bookingSummary').textContent =
           `${selectedDate} ${selectedTime}（${data.topic}）`;
