@@ -466,7 +466,7 @@
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         let successText = '我們的顧問會在 1-2 個工作天內與您聯繫，為您推薦最適合的職缺。';
         if (data.hasBooking) {
-          successText = '您已預約 ' + selectedDate + ' ' + selectedTime + ' 的免費諮詢。\n我們會透過 LINE 發送確認訊息與 Google Meet 連結給您。';
+          successText = '您已預約 ' + selectedDate + ' ' + selectedTime + ' 的諮詢，若預約成功，我們會透過 LINE 發送確認訊息給您並提醒。';
         }
         document.getElementById('successMsg').textContent = successText;
         document.getElementById('successScreen').classList.remove('hidden');
