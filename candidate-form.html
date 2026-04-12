@@ -26,6 +26,13 @@
     .time-slot.available:hover { border-color: #667eea; background: #f0f4ff; }
     .time-slot.selected { background: #667eea; color: white; border-color: #667eea; }
     .time-slot.booked { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; text-decoration: line-through; }
+    .job-func-card { min-width: 140px; max-width: 140px; padding: 18px 12px; border-radius: 16px; border: 2px solid #e2e8f0; cursor: pointer; text-align: center; transition: all 0.25s; background: #fff; flex-shrink: 0; }
+    .job-func-card:hover { border-color: #667eea; background: #f8f7ff; }
+    .job-func-card.selected { border-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; transform: scale(1.04); box-shadow: 0 6px 20px rgba(102,126,234,0.35); }
+    .job-func-card.selected .jf-desc { color: rgba(255,255,255,0.8); }
+    .jf-icon { font-size: 32px; margin-bottom: 8px; }
+    .jf-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .jf-desc { font-size: 11px; color: #94a3b8; line-height: 1.3; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -68,15 +75,36 @@
               class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">目前職能 <span class="text-red-400">*</span></label>
-            <select id="jobFunction" required class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
-              <option value="">請選擇您的職能</option>
-              <option value="財務">財務</option>
-              <option value="法務">法務</option>
-              <option value="人資">人資</option>
-              <option value="工程師">工程師</option>
-              <option value="行銷與業務">行銷與業務</option>
-            </select>
+            <label class="block text-sm font-medium text-gray-600 mb-2">我的職能 <span class="text-red-400">*</span></label>
+            <input type="hidden" id="jobFunction" required>
+            <div class="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory -mx-1 px-1" id="jobFuncCarousel" style="scroll-behavior:smooth;-webkit-overflow-scrolling:touch;">
+              <div class="job-func-card snap-center" data-value="財務" onclick="selectJobFunc(this)">
+                <div class="jf-icon">&#x1f4b0;</div>
+                <div class="jf-title">財務</div>
+                <div class="jf-desc">會計、財務分析、稽核</div>
+              </div>
+              <div class="job-func-card snap-center" data-value="法務" onclick="selectJobFunc(this)">
+                <div class="jf-icon">&#x2696;&#xfe0f;</div>
+                <div class="jf-title">法務</div>
+                <div class="jf-desc">法律顧問、合規、智財</div>
+              </div>
+              <div class="job-func-card snap-center" data-value="人資" onclick="selectJobFunc(this)">
+                <div class="jf-icon">&#x1f465;</div>
+                <div class="jf-title">人資</div>
+                <div class="jf-desc">招募、薪酬、員工關係</div>
+              </div>
+              <div class="job-func-card snap-center" data-value="工程師" onclick="selectJobFunc(this)">
+                <div class="jf-icon">&#x1f4bb;</div>
+                <div class="jf-title">工程師</div>
+                <div class="jf-desc">軟體、硬體、系統開發</div>
+              </div>
+              <div class="job-func-card snap-center" data-value="行銷與業務" onclick="selectJobFunc(this)">
+                <div class="jf-icon">&#x1f4e3;</div>
+                <div class="jf-title">行銷與業務</div>
+                <div class="jf-desc">品牌行銷、業務開發</div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">&#x2190; 左右滑動選擇 &#x2192;</p>
           </div>
         </div>
       </div>
@@ -267,6 +295,13 @@
 
     let isSubmitting = false; // dedup protection
 
+    // === Job Function Carousel ===
+    function selectJobFunc(el) {
+      document.querySelectorAll('.job-func-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('jobFunction').value = el.dataset.value;
+    }
+
     // === Validation ===
     function isValidPhone(phone) {
       return /^09\d{2}-?\d{3}-?\d{3}$/.test(phone);
@@ -423,6 +458,11 @@
         showFieldError('email', '請輸入正確 Email 格式');
         hasError = true;
       } else { clearFieldError('email'); }
+
+      if (!document.getElementById('jobFunction').value) {
+        showFieldError('jobFuncCarousel', '請滑動選擇您的職能');
+        hasError = true;
+      } else { clearFieldError('jobFuncCarousel'); }
 
       const jobTypes = getSelectedChips('jobTypes');
       if (jobTypes.length === 0) {
