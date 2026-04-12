@@ -67,6 +67,17 @@
             <input type="email" id="email" placeholder="your@email.com"
               class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none">
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">目前職能 <span class="text-red-400">*</span></label>
+            <select id="jobFunction" required class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
+              <option value="">請選擇您的職能</option>
+              <option value="工程師">工程師</option>
+              <option value="財務">財務</option>
+              <option value="人資">人資</option>
+              <option value="行銷與業務">行銷與業務</option>
+              <option value="法務">法務</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -438,6 +449,7 @@
         name: document.getElementById('name').value.trim(),
         phone: phone,
         email: email,
+        jobFunction: document.getElementById('jobFunction').value,
         company: document.getElementById('company').value.trim(),
         title: document.getElementById('title').value.trim(),
         experience: document.getElementById('experience').value,
