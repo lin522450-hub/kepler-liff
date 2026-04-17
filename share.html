@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>推薦好友 - 克卜勒獵才</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { text-align: center; padding: 40px 24px; color: white; max-width: 360px; }
+    .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status-text { font-size: 16px; opacity: 0.9; }
+    .result-icon { font-size: 64px; margin-bottom: 16px; }
+    .result-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .result-desc { font-size: 14px; opacity: 0.8; margin-bottom: 24px; line-height: 1.5; }
+    .btn { display: inline-block; padding: 12px 32px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-white { background: white; color: #764ba2; }
+    .btn-white:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .btn-outline { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.5); margin-left: 8px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <!-- Loading state -->
+  <div id="loadingState" class="container">
+    <div class="spinner"></div>
+    <p class="status-text">開啟分享...</p>
+  </div>
+
+  <!-- Success state -->
+  <div id="successState" class="container hidden">
+    <div class="result-icon">🎉</div>
+    <div class="result-title">分享成功！</div>
+    <div class="result-desc">感謝您的推薦！<br>好朋友加入後，系統會自動累計您的推薦紀錄。</div>
+    <button class="btn btn-white" onclick="doShare()">再分享一次</button>
+    <button class="btn btn-outline" onclick="closeLiff()">關閉</button>
+  </div>
+
+  <!-- Cancel / Error state -->
+  <div id="cancelState" class="container hidden">
+    <div class="result-icon">📤</div>
+    <div class="result-title">推薦好友</div>
+    <div class="result-desc">分享克卜勒獵才給朋友，<br>一起掌握最新職缺與職涯資源！</div>
+    <button class="btn btn-white" onclick="doShare()">選擇好友分享</button>
+    <button class="btn btn-outline" onclick="closeLiff()">返回聊天</button>
+  </div>
+
+  <!-- Not in LINE -->
+  <div id="errorState" class="container hidden">
+    <div class="result-icon">📱</div>
+    <div class="result-title">請在 LINE 中開啟</div>
+    <div class="result-desc">此功能需要在 LINE App 內使用</div>
+  </div>
+
+  <script>
+    const LIFF_ID = '2009725933-Er5v9VWB';
+    const LINE_BOT_URL = 'https://line.me/R/ti/p/@559slbhi';
+
+    // The Flex Message that gets shared to friends
+    function buildShareMessage() {
+      return [{
+        type: 'flex',
+        altText: '克卜勒獵才 — 免費職涯諮詢，找到更好的工作機會！',
+        contents: {
+          type: 'bubble',
+          size: 'mega',
+          header: {
+            type: 'box', layout: 'vertical',
+            backgroundColor: '#1a1a2e',
+            paddingAll: '20px',
+            contents: [
+              { type: 'text', text: '克卜勒獵才', weight: 'bold', size: 'xl', color: '#ffffff' },
+              { type: 'text', text: 'Kepler Talent', size: 'xs', color: '#ffffffaa', margin: 'sm' }
+            ]
+          },
+          body: {
+            type: 'box', layout: 'vertical',
+            spacing: 'lg', paddingAll: '20px',
+            contents: [
+              { type: 'text', text: '你的朋友推薦你加入！', weight: 'bold', size: 'md', color: '#333333' },
+              { type: 'separator', margin: 'lg' },
+              {
+                type: 'box', layout: 'vertical', spacing: 'sm', margin: 'lg',
+                contents: [
+                  { type: 'box', layout: 'horizontal', spacing: 'sm', contents: [
+                    { type: 'text', text: '✅', size: 'sm', flex: 0 },
+                    { type: 'text', text: '免費職涯諮詢 & 履歷健檢', size: 'sm', color: '#555555', wrap: true, flex: 5 }
+                  ]},
+                  { type: 'box', layout: 'horizontal', spacing: 'sm', contents: [
+                    { type: 'text', text: '✅', size: 'sm', flex: 0 },
+                    { type: 'text', text: '獨家職缺推薦，精準媒合', size: 'sm', color: '#555555', wrap: true, flex: 5 }
+                  ]},
+                  { type: 'box', layout: 'horizontal', spacing: 'sm', contents: [
+                    { type: 'text', text: '✅', size: 'sm', flex: 0 },
+                    { type: 'text', text: '薪資行情 & 面試攻略', size: 'sm', color: '#555555', wrap: true, flex: 5 }
+                  ]}
+                ]
+              },
+              { type: 'text', text: '加入好友，免費開始！', size: 'xs', color: '#aaaaaa', margin: 'lg', align: 'center' }
+            ]
+          },
+          footer: {
+            type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '15px',
+            contents: [
+              {
+                type: 'button',
+                action: { type: 'uri', label: '立即加入好友', uri: LINE_BOT_URL },
+                style: 'primary', color: '#0f3460', height: 'sm'
+              }
+            ]
+          }
+        }
+      }];
+    }
+
+    function showState(stateId) {
+      ['loadingState', 'successState', 'cancelState', 'errorState'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', id !== stateId);
+      });
+    }
+
+    async function doShare() {
+      showState('loadingState');
+      try {
+        const result = await liff.shareTargetPicker(buildShareMessage());
+        if (result && result.status === 'success') {
+          showState('successState');
+        } else {
+          // User canceled
+          showState('cancelState');
+        }
+      } catch (e) {
+        console.error('shareTargetPicker error:', e);
+        showState('cancelState');
+      }
+    }
+
+    function closeLiff() {
+      if (liff.isInClient()) {
+        liff.closeWindow();
+      } else {
+        window.close();
+      }
+    }
+
+    async function init() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isInClient()) {
+          showState('errorState');
+          return;
+        }
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+        // Auto-trigger share picker
+        doShare();
+      } catch (e) {
+        console.error('LIFF init error:', e);
+        showState('errorState');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
