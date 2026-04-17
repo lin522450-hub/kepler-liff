@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企業徵才合作諮詢 - 克卜勒獵才</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #0f766e 0%, #164e63 100%); }
+    .card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    input, select, textarea { transition: border-color 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: #0f766e; box-shadow: 0 0 0 3px rgba(15,118,110,0.15); }
+    .chip { display: inline-block; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; cursor: pointer; font-size: 14px; margin: 4px; transition: all 0.2s; }
+    .chip.selected { background: #0f766e; color: white; border-color: #0f766e; }
+    .btn-submit { background: linear-gradient(135deg, #0f766e 0%, #164e63 100%); transition: transform 0.15s, box-shadow 0.15s; }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,118,110,0.4); }
+    .btn-submit:disabled { opacity: 0.6; transform: none; box-shadow: none; }
+    .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .section-num { width: 24px; height: 24px; border-radius: 50%; background: #ccfbf1; color: #0f766e; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Header -->
+  <div class="gradient-bg text-white px-5 pt-10 pb-8">
+    <div class="flex items-center gap-3 mb-3">
+      <img id="profilePic" src="" alt="" class="w-12 h-12 rounded-full border-2 border-white/30 hidden">
+      <div>
+        <h1 class="text-xl font-bold">💼 企業徵才合作</h1>
+        <p id="greeting" class="text-sm text-white/80">填寫需求，專屬顧問將於 1 個工作天內聯繫您</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div id="formWrapper" class="px-4 -mt-4">
+    <form id="hrForm" class="card p-5 space-y-5">
+
+      <!-- 公司資訊 -->
+      <div>
+        <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span class="section-num">1</span>
+          <span>公司資訊</span>
+        </h2>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">公司名稱 <span class="text-red-500">*</span></label>
+            <input id="f-company" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="例：台積電股份有限公司">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">產業別</label>
+              <select id="f-industry" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+                <option value="">請選擇</option>
+                <option>科技/軟體</option>
+                <option>半導體</option>
+                <option>金融/保險</option>
+                <option>製造業</option>
+                <option>零售/電商</option>
+                <option>生技/醫療</option>
+                <option>顧問/服務業</option>
+                <option>新創</option>
+                <option>其他</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">公司規模</label>
+              <select id="f-size" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+                <option value="">請選擇</option>
+                <option>1-30 人</option>
+                <option>31-100 人</option>
+                <option>101-500 人</option>
+                <option>501-1000 人</option>
+                <option>1000+ 人</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">統一編號</label>
+            <input id="f-taxid" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="8 碼統編（選填）">
+          </div>
+        </div>
+      </div>
+
+      <!-- 聯絡窗口 -->
+      <div>
+        <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span class="section-num">2</span>
+          <span>聯絡窗口</span>
+        </h2>
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">姓名 <span class="text-red-500">*</span></label>
+              <input id="f-name" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="王經理">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">職稱 <span class="text-red-500">*</span></label>
+              <input id="f-title" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="HR Manager">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">部門</label>
+            <input id="f-dept" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="例：人資部、招募團隊">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Email <span class="text-red-500">*</span></label>
+            <input id="f-email" type="email" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="hr@company.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">聯絡電話</label>
+            <input id="f-phone" type="tel" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="02-xxxx-xxxx 或 09xxxxxxxx">
+          </div>
+        </div>
+      </div>
+
+      <!-- 徵才需求 -->
+      <div>
+        <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span class="section-num">3</span>
+          <span>徵才需求</span>
+        </h2>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-2">職缺類型（可複選）</label>
+            <div id="jobTypes" class="flex flex-wrap">
+              <span class="chip" data-val="財務">💰 財務</span>
+              <span class="chip" data-val="法務">⚖️ 法務</span>
+              <span class="chip" data-val="人資">👥 人資</span>
+              <span class="chip" data-val="工程師">💻 工程師</span>
+              <span class="chip" data-val="行銷">📣 行銷</span>
+              <span class="chip" data-val="業務">🤝 業務</span>
+              <span class="chip" data-val="產品">📦 產品</span>
+              <span class="chip" data-val="設計">🎨 設計</span>
+              <span class="chip" data-val="營運">⚙️ 營運</span>
+              <span class="chip" data-val="其他">其他</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">急迫性</label>
+              <select id="f-urgency" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+                <option value="">請選擇</option>
+                <option>🔥 非常急（1 個月內）</option>
+                <option>⚡ 急（1-2 個月）</option>
+                <option>📅 一般（2-3 個月）</option>
+                <option>🗓️ 不急（長期徵才）</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">預計招募人數</label>
+              <select id="f-headcount" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+                <option value="">請選擇</option>
+                <option>1 人</option>
+                <option>2-5 人</option>
+                <option>6-10 人</option>
+                <option>10+ 人</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 合作方式 -->
+      <div>
+        <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span class="section-num">4</span>
+          <span>合作方式</span>
+        </h2>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-2">服務方案（可複選）</label>
+            <div id="serviceTypes" class="flex flex-wrap">
+              <span class="chip" data-val="獵才服務">🎯 獵才服務</span>
+              <span class="chip" data-val="RPO">🔄 RPO 招募委外</span>
+              <span class="chip" data-val="顧問諮詢">💡 顧問諮詢</span>
+              <span class="chip" data-val="薪資調查">📊 薪資調查</span>
+              <span class="chip" data-val="尚未確定">❓ 尚未確定</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">預算範圍（單職缺）</label>
+            <select id="f-budget" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+              <option value="">請選擇</option>
+              <option>15% 以下</option>
+              <option>15-20%</option>
+              <option>20-25%</option>
+              <option>25% 以上</option>
+              <option>固定費用（面議）</option>
+              <option>依服務方案討論</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 詳細需求 -->
+      <div>
+        <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span class="section-num">5</span>
+          <span>詳細需求</span>
+        </h2>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">職缺描述 / 其他補充</label>
+          <textarea id="f-notes" rows="5" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm" placeholder="請簡述職缺內容、技能需求、希望合作時程，或任何想讓顧問了解的資訊..."></textarea>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="pt-2">
+        <button type="submit" id="submitBtn" class="btn-submit w-full py-3.5 text-white font-bold rounded-xl text-base">
+          送出合作諮詢
+        </button>
+        <p class="text-xs text-gray-400 text-center mt-3">送出後專屬顧問將於 1 個工作天內與您聯繫</p>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Success -->
+  <div id="successWrapper" class="px-4 -mt-4 hidden">
+    <div class="card p-8 text-center">
+      <div class="w-20 h-20 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-10 h-10 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">合作諮詢已送出！</h2>
+      <p class="text-gray-500 mb-6">感謝您的信任，顧問會在 1 個工作天內主動聯繫您</p>
+      <button onclick="closeLiff()" class="btn-submit px-8 py-3 text-white font-bold rounded-xl">
+        返回聊天室
+      </button>
+    </div>
+  </div>
+
+  <div class="h-8"></div>
+
+  <script>
+    // === CONFIG ===
+    const LIFF_ID = 'REPLACE_WITH_LIFF_ID'; // Will be updated after LINE Dev Console setup
+    const WEBHOOK_URL = 'https://voters-over-surrey-answered.trycloudflare.com/webhook/liff-hr-form';
+
+    let lineProfile = null;
+    let isSubmitting = false;
+
+    // === LIFF Init ===
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+          lineProfile = await liff.getProfile();
+          const pic = document.getElementById('profilePic');
+          if (lineProfile.pictureUrl) {
+            pic.src = lineProfile.pictureUrl;
+            pic.classList.remove('hidden');
+          }
+          document.getElementById('greeting').textContent = '您好，' + lineProfile.displayName + '！填寫需求後顧問將主動聯繫';
+        } else if (liff.isInClient()) {
+          liff.login();
+        }
+      } catch (e) {
+        console.warn('LIFF init failed (standalone mode):', e);
+      }
+    }
+
+    // === Chip multi-select ===
+    function initChips(containerId) {
+      const container = document.getElementById(containerId);
+      container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('chip')) {
+          e.target.classList.toggle('selected');
+        }
+      });
+    }
+    function getSelectedChips(containerId) {
+      return Array.from(document.querySelectorAll('#' + containerId + ' .chip.selected')).map(c => c.dataset.val);
+    }
+
+    // === Submit ===
+    async function submitForm(e) {
+      e.preventDefault();
+      if (isSubmitting) return;
+
+      const company = document.getElementById('f-company').value.trim();
+      const name = document.getElementById('f-name').value.trim();
+      const title = document.getElementById('f-title').value.trim();
+      const email = document.getElementById('f-email').value.trim();
+
+      if (!company) { alert('請填寫公司名稱'); return; }
+      if (!name) { alert('請填寫聯絡人姓名'); return; }
+      if (!title) { alert('請填寫聯絡人職稱'); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('請填寫正確的 Email'); return; }
+
+      const payload = {
+        lineUserId: lineProfile ? lineProfile.userId : '',
+        lineDisplayName: lineProfile ? lineProfile.displayName : '',
+        company: company,
+        industry: document.getElementById('f-industry').value,
+        companySize: document.getElementById('f-size').value,
+        taxId: document.getElementById('f-taxid').value.trim(),
+        contactName: name,
+        contactTitle: title,
+        contactDept: document.getElementById('f-dept').value.trim(),
+        email: email,
+        phone: document.getElementById('f-phone').value.trim(),
+        jobTypes: getSelectedChips('jobTypes').join(', '),
+        urgency: document.getElementById('f-urgency').value,
+        headcount: document.getElementById('f-headcount').value,
+        serviceTypes: getSelectedChips('serviceTypes').join(', '),
+        budget: document.getElementById('f-budget').value,
+        notes: document.getElementById('f-notes').value.trim(),
+        submittedAt: new Date().toISOString()
+      };
+
+      isSubmitting = true;
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> 送出中...';
+
+      try {
+        const resp = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        document.getElementById('formWrapper').classList.add('hidden');
+        document.getElementById('successWrapper').classList.remove('hidden');
+        window.scrollTo(0, 0);
+      } catch (err) {
+        alert('送出失敗：' + err.message + '\n請稍後再試或直接與我們聯繫');
+        btn.disabled = false;
+        btn.innerHTML = '送出合作諮詢';
+        isSubmitting = false;
+      }
+    }
+
+    function closeLiff() {
+      if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
+        liff.closeWindow();
+      } else {
+        window.location.href = 'https://line.me/R/oaMessage/@317hzumy/';
+      }
+    }
+
+    // === Init ===
+    document.addEventListener('DOMContentLoaded', () => {
+      initChips('jobTypes');
+      initChips('serviceTypes');
+      document.getElementById('hrForm').addEventListener('submit', submitForm);
+      initLiff();
+    });
+  </script>
+
+</body>
+</html>
