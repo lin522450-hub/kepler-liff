@@ -33,6 +33,10 @@
     .jf-icon { font-size: 32px; margin-bottom: 8px; }
     .jf-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
     .jf-desc { font-size: 11px; color: #94a3b8; line-height: 1.3; }
+    .form-section { display: none; }
+    .form-section.visible { display: block; }
+    .init-loading { display: flex; align-items: center; justify-content: center; min-height: 200px; }
+    .init-spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -42,192 +46,142 @@
     <div class="flex items-center gap-3 mb-3">
       <img id="profilePic" src="" alt="" class="w-12 h-12 rounded-full border-2 border-white/30 hidden">
       <div>
-        <h1 class="text-xl font-bold">人選資料填寫</h1>
+        <h1 id="formTitle" class="text-xl font-bold">人選資料填寫</h1>
         <p id="greeting" class="text-sm text-white/80">讓我們為您媒合最適合的職缺</p>
       </div>
     </div>
   </div>
 
-  <!-- Form -->
-  <div class="px-4 -mt-4">
+  <!-- Loading -->
+  <div id="initLoading" class="init-loading px-4 -mt-4">
+    <div class="card p-8 w-full text-center">
+      <div class="init-spinner mx-auto mb-3"></div>
+      <p class="text-sm text-gray-400">載入表單設定...</p>
+    </div>
+  </div>
+
+  <!-- Form (hidden until config loaded) -->
+  <div id="formWrapper" class="px-4 -mt-4 hidden">
     <form id="candidateForm" class="card p-5 space-y-5">
 
-      <!-- 基本資料 -->
-      <div>
+      <!-- Section: basic -->
+      <div id="section-basic" class="form-section">
         <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center font-bold">1</span>
-          基本資料
+          <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center font-bold" id="section-basic-num">1</span>
+          <span id="section-basic-label">基本資料</span>
         </h2>
         <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">姓名 <span class="text-red-400">*</span></label>
-            <input type="text" id="name" required placeholder="請輸入您的姓名"
+          <div id="field-name-wrap">
+            <label class="block text-sm font-medium text-gray-600 mb-1">姓名 <span class="text-red-400 req-mark" data-field="name">*</span></label>
+            <input type="text" id="name" placeholder="請輸入您的姓名"
               class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">手機號碼 <span class="text-red-400">*</span></label>
-            <input type="tel" id="phone" required placeholder="0912-345-678"
+          <div id="field-phone-wrap">
+            <label class="block text-sm font-medium text-gray-600 mb-1">手機號碼 <span class="text-red-400 req-mark" data-field="phone">*</span></label>
+            <input type="tel" id="phone" placeholder="0912-345-678"
               class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+          <div id="field-email-wrap">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Email <span class="text-red-400 req-mark hidden" data-field="email">*</span></label>
             <input type="email" id="email" placeholder="your@email.com"
               class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-2">我的職能 <span class="text-red-400">*</span></label>
-            <input type="hidden" id="jobFunction" required>
+            <input type="hidden" id="jobFunction">
             <div class="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory -mx-1 px-1" id="jobFuncCarousel" style="scroll-behavior:smooth;-webkit-overflow-scrolling:touch;">
-              <div class="job-func-card snap-center" data-value="財務" onclick="selectJobFunc(this)">
-                <div class="jf-icon">&#x1f4b0;</div>
-                <div class="jf-title">財務</div>
-                <div class="jf-desc">會計、財務分析、稽核</div>
-              </div>
-              <div class="job-func-card snap-center" data-value="法務" onclick="selectJobFunc(this)">
-                <div class="jf-icon">&#x2696;&#xfe0f;</div>
-                <div class="jf-title">法務</div>
-                <div class="jf-desc">法律顧問、合規、智財</div>
-              </div>
-              <div class="job-func-card snap-center" data-value="人資" onclick="selectJobFunc(this)">
-                <div class="jf-icon">&#x1f465;</div>
-                <div class="jf-title">人資</div>
-                <div class="jf-desc">招募、薪酬、員工關係</div>
-              </div>
-              <div class="job-func-card snap-center" data-value="工程師" onclick="selectJobFunc(this)">
-                <div class="jf-icon">&#x1f4bb;</div>
-                <div class="jf-title">工程師</div>
-                <div class="jf-desc">軟體、硬體、系統開發</div>
-              </div>
-              <div class="job-func-card snap-center" data-value="行銷與業務" onclick="selectJobFunc(this)">
-                <div class="jf-icon">&#x1f4e3;</div>
-                <div class="jf-title">行銷與業務</div>
-                <div class="jf-desc">品牌行銷、業務開發</div>
-              </div>
+              <!-- Dynamically generated -->
             </div>
             <p class="text-xs text-gray-400 mt-1">&#x2190; 左右滑動選擇 &#x2192;</p>
           </div>
         </div>
       </div>
 
-      <!-- 目前工作 -->
-      <div>
+      <!-- Section: work -->
+      <div id="section-work" class="form-section">
         <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold">2</span>
-          目前工作
+          <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold" id="section-work-num">2</span>
+          <span id="section-work-label">目前工作</span>
         </h2>
         <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">現職公司 <span class="text-red-400">*</span></label>
-            <input type="text" id="company" required placeholder="公司名稱"
+          <div id="field-company-wrap">
+            <label class="block text-sm font-medium text-gray-600 mb-1">現職公司 <span class="text-red-400 req-mark" data-field="company">*</span></label>
+            <input type="text" id="company" placeholder="公司名稱"
               class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">職稱 <span class="text-red-400">*</span></label>
-            <input type="text" id="title" required placeholder="例：資深後端工程師"
+          <div id="field-title-wrap">
+            <label class="block text-sm font-medium text-gray-600 mb-1">職稱 <span class="text-red-400 req-mark" data-field="title">*</span></label>
+            <input type="text" id="title" placeholder="例：資深後端工程師"
               class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-1">工作年資</label>
             <select id="experience" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
               <option value="">請選擇</option>
-              <option value="0-1">0-1 年</option>
-              <option value="1-3">1-3 年</option>
-              <option value="3-5">3-5 年</option>
-              <option value="5-8">5-8 年</option>
-              <option value="8-10">8-10 年</option>
-              <option value="10+">10 年以上</option>
+              <!-- Dynamically generated -->
             </select>
           </div>
         </div>
       </div>
 
-      <!-- 期望職位 -->
-      <div>
+      <!-- Section: expect -->
+      <div id="section-expect" class="form-section">
         <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs flex items-center justify-center font-bold">3</span>
-          期望方向
+          <span class="w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs flex items-center justify-center font-bold" id="section-expect-num">3</span>
+          <span id="section-expect-label">期望方向</span>
         </h2>
         <div class="space-y-3">
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-2">期望職位類型（可多選）</label>
             <div id="jobTypes" class="flex flex-wrap">
-              <span class="chip" data-value="軟體工程">軟體工程</span>
-              <span class="chip" data-value="產品管理">產品管理</span>
-              <span class="chip" data-value="設計">設計</span>
-              <span class="chip" data-value="數據分析">數據分析</span>
-              <span class="chip" data-value="行銷">行銷</span>
-              <span class="chip" data-value="業務">業務</span>
-              <span class="chip" data-value="人資">人資</span>
-              <span class="chip" data-value="財務會計">財務會計</span>
-              <span class="chip" data-value="營運管理">營運管理</span>
-              <span class="chip" data-value="其他">其他</span>
+              <!-- Dynamically generated -->
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-2">期望產業（可多選）</label>
             <div id="industries" class="flex flex-wrap">
-              <span class="chip" data-value="科技/軟體">科技/軟體</span>
-              <span class="chip" data-value="金融/銀行">金融/銀行</span>
-              <span class="chip" data-value="電商/零售">電商/零售</span>
-              <span class="chip" data-value="製造/半導體">製造/半導體</span>
-              <span class="chip" data-value="醫療/生技">醫療/生技</span>
-              <span class="chip" data-value="媒體/娛樂">媒體/娛樂</span>
-              <span class="chip" data-value="顧問/諮詢">顧問/諮詢</span>
-              <span class="chip" data-value="不限">不限</span>
+              <!-- Dynamically generated -->
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 薪資 -->
-      <div>
+      <!-- Section: salary -->
+      <div id="section-salary" class="form-section">
         <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 text-xs flex items-center justify-center font-bold">4</span>
-          薪資期望
+          <span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 text-xs flex items-center justify-center font-bold" id="section-salary-num">4</span>
+          <span id="section-salary-label">薪資期望</span>
         </h2>
         <div class="space-y-3">
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-1">目前年薪（萬）</label>
             <select id="currentSalary" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
               <option value="">不便透露</option>
-              <option value="40以下">40 萬以下</option>
-              <option value="40-60">40-60 萬</option>
-              <option value="60-80">60-80 萬</option>
-              <option value="80-100">80-100 萬</option>
-              <option value="100-130">100-130 萬</option>
-              <option value="130-160">130-160 萬</option>
-              <option value="160-200">160-200 萬</option>
-              <option value="200+">200 萬以上</option>
+              <!-- Dynamically generated -->
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-1">期望年薪（萬）</label>
             <select id="expectedSalary" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
               <option value="">再議</option>
-              <option value="50-70">50-70 萬</option>
-              <option value="70-90">70-90 萬</option>
-              <option value="90-120">90-120 萬</option>
-              <option value="120-150">120-150 萬</option>
-              <option value="150-180">150-180 萬</option>
-              <option value="180-220">180-220 萬</option>
-              <option value="220+">220 萬以上</option>
+              <!-- Dynamically generated -->
             </select>
           </div>
         </div>
       </div>
 
-      <!-- 補充 -->
-      <div>
+      <!-- Section: notes -->
+      <div id="section-notes" class="form-section">
         <label class="block text-sm font-medium text-gray-600 mb-1">補充說明</label>
         <textarea id="notes" rows="3" placeholder="任何想讓我們知道的事（轉職原因、特殊需求等）"
           class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none resize-none"></textarea>
       </div>
 
-      <!-- 預約諮詢（可選） -->
-      <div>
+      <!-- Section: booking -->
+      <div id="section-booking" class="form-section">
         <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold">5</span>
-          預約免費諮詢
+          <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold" id="section-booking-num">5</span>
+          <span id="section-booking-label">預約免費諮詢</span>
           <span class="text-xs font-normal text-gray-400 ml-1">（選填）</span>
         </h2>
         <p class="text-xs text-gray-500 mb-3">線上視訊（Google Meet）| 30 分鐘 | 完全免費</p>
@@ -245,12 +199,7 @@
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-1">想聊什麼？</label>
             <select id="bookingTopic" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none bg-white">
-              <option value="職涯規劃">職涯規劃與轉職建議</option>
-              <option value="履歷健檢">履歷健檢與優化</option>
-              <option value="面試準備">面試準備與模擬</option>
-              <option value="薪資談判">薪資談判策略</option>
-              <option value="市場趨勢">產業趨勢與市場分析</option>
-              <option value="其他">其他</option>
+              <!-- Dynamically generated -->
             </select>
           </div>
         </div>
@@ -261,7 +210,7 @@
         class="btn-submit w-full py-3 text-white font-bold rounded-xl text-base">
         送出資料
       </button>
-      <p class="text-xs text-gray-400 text-center">您的資料將受到嚴格保密，僅供職缺媒合使用</p>
+      <p id="privacyText" class="text-xs text-gray-400 text-center">您的資料將受到嚴格保密，僅供職缺媒合使用</p>
     </form>
   </div>
 
@@ -287,13 +236,258 @@
     // === CONFIG ===
     const LIFF_ID = '2009725933-8ZSWKI7v';
     const WEBHOOK_URL = 'https://somebody-spencer-geography-producer.trycloudflare.com/webhook/liff-candidate';
+    const ADMIN_API_URL = 'https://somebody-spencer-geography-producer.trycloudflare.com/webhook/admin-api';
 
     let lineProfile = null;
     let selectedDate = null;
     let selectedTime = null;
     let bookedSlots = {};
+    let isSubmitting = false;
+    let formConfig = null; // loaded from API
+    let fieldRequirements = {}; // {nameRequired: true, phoneRequired: true, ...}
 
-    let isSubmitting = false; // dedup protection
+    // === Load Form Config from Admin API ===
+    async function loadFormConfig() {
+      try {
+        const resp = await fetch(ADMIN_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get_form_config' })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        if (data.success && data.config) {
+          formConfig = data.config;
+          return true;
+        }
+      } catch (e) {
+        console.warn('Failed to load form config, using defaults:', e);
+      }
+      return false;
+    }
+
+    // === Apply config to form ===
+    function applyFormConfig() {
+      if (!formConfig) return;
+
+      // 1. Meta: title, subtitle, button text, privacy
+      if (formConfig.meta) {
+        if (formConfig.meta.formTitle) {
+          document.getElementById('formTitle').textContent = formConfig.meta.formTitle;
+          document.title = formConfig.meta.formTitle + ' - 克卜勒獵才';
+        }
+        if (formConfig.meta.formSubtitle) {
+          const greetEl = document.getElementById('greeting');
+          if (!lineProfile) greetEl.textContent = formConfig.meta.formSubtitle;
+        }
+        if (formConfig.meta.submitBtnText) {
+          document.getElementById('submitBtn').textContent = formConfig.meta.submitBtnText;
+        }
+        if (formConfig.meta.privacyText) {
+          document.getElementById('privacyText').textContent = formConfig.meta.privacyText;
+        }
+      }
+
+      // 2. Sections: show/hide + reorder + labels
+      if (formConfig.sections && formConfig.sections.length > 0) {
+        const sectionColors = {
+          basic: { bg: 'bg-purple-100', text: 'text-purple-600' },
+          work: { bg: 'bg-blue-100', text: 'text-blue-600' },
+          expect: { bg: 'bg-green-100', text: 'text-green-600' },
+          salary: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
+          notes: { bg: 'bg-gray-100', text: 'text-gray-600' },
+          booking: { bg: 'bg-blue-100', text: 'text-blue-600' }
+        };
+        let sectionNum = 1;
+        formConfig.sections.forEach(sec => {
+          const sectionEl = document.getElementById('section-' + sec.id);
+          if (sectionEl) {
+            sectionEl.classList.add('visible');
+            sectionEl.style.order = sec.order;
+            // Update label
+            const labelEl = document.getElementById('section-' + sec.id + '-label');
+            if (labelEl && sec.label) labelEl.textContent = sec.label;
+            // Update section number
+            const numEl = document.getElementById('section-' + sec.id + '-num');
+            if (numEl) numEl.textContent = sectionNum++;
+          }
+        });
+      } else {
+        // Fallback: show all sections
+        document.querySelectorAll('.form-section').forEach(el => el.classList.add('visible'));
+      }
+
+      // 3. Field requirements
+      if (formConfig.fields) {
+        fieldRequirements = formConfig.fields;
+        // Apply required marks
+        document.querySelectorAll('.req-mark').forEach(mark => {
+          const field = mark.dataset.field;
+          const reqKey = field + 'Required';
+          if (fieldRequirements[reqKey] === false) {
+            mark.classList.add('hidden');
+          } else if (fieldRequirements[reqKey] === true) {
+            mark.classList.remove('hidden');
+          }
+        });
+      }
+
+      // 4. Job Functions carousel
+      if (formConfig.jobFunctions && formConfig.jobFunctions.length > 0) {
+        const container = document.getElementById('jobFuncCarousel');
+        container.innerHTML = '';
+        formConfig.jobFunctions.forEach(jf => {
+          const card = document.createElement('div');
+          card.className = 'job-func-card snap-center';
+          card.dataset.value = jf.key;
+          card.onclick = function() { selectJobFunc(this); };
+          card.innerHTML =
+            '<div class="jf-icon">' + (jf.icon || '') + '</div>' +
+            '<div class="jf-title">' + escHtml(jf.label || jf.key) + '</div>' +
+            '<div class="jf-desc">' + escHtml(jf.desc || '') + '</div>';
+          container.appendChild(card);
+        });
+      }
+
+      // 5. Job Types chips
+      if (formConfig.jobTypes && formConfig.jobTypes.length > 0) {
+        const container = document.getElementById('jobTypes');
+        container.innerHTML = '';
+        formConfig.jobTypes.forEach(jt => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.dataset.value = jt.key;
+          chip.textContent = jt.label || jt.key;
+          chip.addEventListener('click', () => chip.classList.toggle('selected'));
+          container.appendChild(chip);
+        });
+      }
+
+      // 6. Industries chips
+      if (formConfig.industries && formConfig.industries.length > 0) {
+        const container = document.getElementById('industries');
+        container.innerHTML = '';
+        formConfig.industries.forEach(ind => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.dataset.value = ind.key;
+          chip.textContent = ind.label || ind.key;
+          chip.addEventListener('click', () => chip.classList.toggle('selected'));
+          container.appendChild(chip);
+        });
+      }
+
+      // 7. Experience select
+      if (formConfig.experience && formConfig.experience.length > 0) {
+        const select = document.getElementById('experience');
+        // Keep first default option
+        while (select.options.length > 1) select.remove(1);
+        formConfig.experience.forEach(exp => {
+          const opt = document.createElement('option');
+          opt.value = exp.value;
+          opt.textContent = exp.label;
+          select.appendChild(opt);
+        });
+      }
+
+      // 8. Current Salary select
+      if (formConfig.currentSalary && formConfig.currentSalary.length > 0) {
+        const select = document.getElementById('currentSalary');
+        while (select.options.length > 1) select.remove(1);
+        formConfig.currentSalary.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.value;
+          opt.textContent = s.label;
+          select.appendChild(opt);
+        });
+      }
+
+      // 9. Expected Salary select
+      if (formConfig.expectedSalary && formConfig.expectedSalary.length > 0) {
+        const select = document.getElementById('expectedSalary');
+        while (select.options.length > 1) select.remove(1);
+        formConfig.expectedSalary.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.value;
+          opt.textContent = s.label;
+          select.appendChild(opt);
+        });
+      }
+
+      // 10. Booking topics
+      if (formConfig.bookingTopics && formConfig.bookingTopics.length > 0) {
+        const select = document.getElementById('bookingTopic');
+        select.innerHTML = '';
+        formConfig.bookingTopics.forEach(bt => {
+          const opt = document.createElement('option');
+          opt.value = bt.value;
+          opt.textContent = bt.label;
+          select.appendChild(opt);
+        });
+      }
+    }
+
+    // === Hardcoded fallback (if API fails) ===
+    function applyFallbackConfig() {
+      formConfig = {
+        meta: {},
+        sections: [
+          { id: 'basic', label: '基本資料', order: 1 },
+          { id: 'work', label: '目前工作', order: 2 },
+          { id: 'expect', label: '期望方向', order: 3 },
+          { id: 'salary', label: '薪資期望', order: 4 },
+          { id: 'notes', label: '補充說明', order: 5 },
+          { id: 'booking', label: '預約免費諮詢', order: 6 }
+        ],
+        fields: { nameRequired: true, phoneRequired: true, emailRequired: false, companyRequired: true, titleRequired: true },
+        jobFunctions: [
+          { key: '財務', label: '財務', desc: '會計、財務分析、稽核', icon: '\u{1F4B0}' },
+          { key: '法務', label: '法務', desc: '法律顧問、合規、智財', icon: '\u2696\uFE0F' },
+          { key: '人資', label: '人資', desc: '招募、薪酬、員工關係', icon: '\u{1F465}' },
+          { key: '工程師', label: '工程師', desc: '軟體、硬體、系統開發', icon: '\u{1F4BB}' },
+          { key: '行銷與業務', label: '行銷與業務', desc: '品牌行銷、業務開發', icon: '\u{1F4E3}' }
+        ],
+        jobTypes: [
+          { key: '軟體工程', label: '軟體工程' }, { key: '產品管理', label: '產品管理' },
+          { key: '設計', label: '設計' }, { key: '數據分析', label: '數據分析' },
+          { key: '行銷', label: '行銷' }, { key: '業務', label: '業務' },
+          { key: '人資', label: '人資' }, { key: '財務會計', label: '財務會計' },
+          { key: '營運管理', label: '營運管理' }, { key: '其他', label: '其他' }
+        ],
+        industries: [
+          { key: '科技/軟體', label: '科技/軟體' }, { key: '金融/銀行', label: '金融/銀行' },
+          { key: '電商/零售', label: '電商/零售' }, { key: '製造/半導體', label: '製造/半導體' },
+          { key: '醫療/生技', label: '醫療/生技' }, { key: '媒體/娛樂', label: '媒體/娛樂' },
+          { key: '顧問/諮詢', label: '顧問/諮詢' }, { key: '不限', label: '不限' }
+        ],
+        experience: [
+          { value: '0-1', label: '0-1 年' }, { value: '1-3', label: '1-3 年' },
+          { value: '3-5', label: '3-5 年' }, { value: '5-8', label: '5-8 年' },
+          { value: '8-10', label: '8-10 年' }, { value: '10+', label: '10 年以上' }
+        ],
+        currentSalary: [
+          { value: '40以下', label: '40 萬以下' }, { value: '40-60', label: '40-60 萬' },
+          { value: '60-80', label: '60-80 萬' }, { value: '80-100', label: '80-100 萬' },
+          { value: '100-130', label: '100-130 萬' }, { value: '130-160', label: '130-160 萬' },
+          { value: '160-200', label: '160-200 萬' }, { value: '200+', label: '200 萬以上' }
+        ],
+        expectedSalary: [
+          { value: '50-70', label: '50-70 萬' }, { value: '70-90', label: '70-90 萬' },
+          { value: '90-120', label: '90-120 萬' }, { value: '120-150', label: '120-150 萬' },
+          { value: '150-180', label: '150-180 萬' }, { value: '180-220', label: '180-220 萬' },
+          { value: '220+', label: '220 萬以上' }
+        ],
+        bookingTopics: [
+          { value: '職涯規劃', label: '職涯規劃與轉職建議' }, { value: '履歷健檢', label: '履歷健檢與優化' },
+          { value: '面試準備', label: '面試準備與模擬' }, { value: '薪資談判', label: '薪資談判策略' },
+          { value: '市場趨勢', label: '產業趨勢與市場分析' }, { value: '其他', label: '其他' }
+        ]
+      };
+      applyFormConfig();
+    }
+
+    // === HTML escape ===
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
     // === Job Function Carousel ===
     function selectJobFunc(el) {
@@ -311,14 +505,24 @@
     }
     function showFieldError(id, msg) {
       const el = document.getElementById(id);
+      if (!el) return;
       let err = el.parentElement.querySelector('.field-error');
       if (!err) { err = document.createElement('p'); err.className = 'field-error text-xs text-red-500 mt-1'; el.parentElement.appendChild(err); }
       err.textContent = msg;
     }
     function clearFieldError(id) {
       const el = document.getElementById(id);
+      if (!el) return;
       const err = el.parentElement.querySelector('.field-error');
       if (err) err.remove();
+    }
+
+    function isFieldRequired(fieldName) {
+      const key = fieldName + 'Required';
+      if (fieldRequirements.hasOwnProperty(key)) return fieldRequirements[key];
+      // Defaults
+      if (fieldName === 'email') return false;
+      return true; // name, phone, company, title default to required
     }
 
     // === LIFF Init ===
@@ -332,7 +536,9 @@
         lineProfile = await liff.getProfile();
         document.getElementById('profilePic').src = lineProfile.pictureUrl;
         document.getElementById('profilePic').classList.remove('hidden');
-        document.getElementById('greeting').textContent = `${lineProfile.displayName}，讓我們為您媒合最適合的職缺`;
+        const subtitle = (formConfig && formConfig.meta && formConfig.meta.formSubtitle)
+          ? formConfig.meta.formSubtitle : '讓我們為您媒合最適合的職缺';
+        document.getElementById('greeting').textContent = lineProfile.displayName + '，' + subtitle;
         // Auto-fill name from LINE profile
         const nameInput = document.getElementById('name');
         if (!nameInput.value) nameInput.value = lineProfile.displayName;
@@ -343,7 +549,7 @@
     }
 
     // === Calendar FreeBusy ===
-    const BOOKING_WEBHOOK = 'https://somebody-spencer-geography-producer.trycloudflare.com/webhook/liff-booking';
+    const BOOKING_WEBHOOK = WEBHOOK_URL.replace('/webhook/liff-candidate', '/webhook/liff-booking');
 
     async function loadBookedSlots() {
       try {
@@ -358,7 +564,6 @@
           const data = await resp.json();
           const d = Array.isArray(data) ? data[0] : data;
           bookedSlots = d.bookedSlots || {};
-          // Auto-fill from previous data
           if (d.userInfo) {
             const phoneInput = document.getElementById('phone');
             if (d.userInfo.phone && !phoneInput.value) phoneInput.value = d.userInfo.phone;
@@ -430,13 +635,8 @@
       });
     }
 
-    // === Chip Selection ===
-    document.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => chip.classList.toggle('selected'));
-    });
-
     function getSelectedChips(containerId) {
-      return Array.from(document.querySelectorAll(`#${containerId} .chip.selected`))
+      return Array.from(document.querySelectorAll('#' + containerId + ' .chip.selected'))
         .map(c => c.dataset.value);
     }
 
@@ -444,25 +644,60 @@
     document.getElementById('candidateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Validation
       const phone = document.getElementById('phone').value.trim();
       const email = document.getElementById('email').value.trim();
       let hasError = false;
 
-      if (!isValidPhone(phone)) {
-        showFieldError('phone', '請輸入正確手機格式（09xx-xxx-xxx）');
+      // Validate based on dynamic requirements
+      if (isFieldRequired('name') && !document.getElementById('name').value.trim()) {
+        showFieldError('name', '請輸入姓名');
         hasError = true;
-      } else { clearFieldError('phone'); }
+      } else { clearFieldError('name'); }
 
-      if (!isValidEmail(email)) {
-        showFieldError('email', '請輸入正確 Email 格式');
-        hasError = true;
-      } else { clearFieldError('email'); }
+      if (isFieldRequired('phone')) {
+        if (!phone) {
+          showFieldError('phone', '請輸入手機號碼');
+          hasError = true;
+        } else if (!isValidPhone(phone)) {
+          showFieldError('phone', '請輸入正確手機格式（09xx-xxx-xxx）');
+          hasError = true;
+        } else { clearFieldError('phone'); }
+      } else {
+        if (phone && !isValidPhone(phone)) {
+          showFieldError('phone', '請輸入正確手機格式（09xx-xxx-xxx）');
+          hasError = true;
+        } else { clearFieldError('phone'); }
+      }
+
+      if (isFieldRequired('email')) {
+        if (!email) {
+          showFieldError('email', '請輸入 Email');
+          hasError = true;
+        } else if (!isValidEmail(email)) {
+          showFieldError('email', '請輸入正確 Email 格式');
+          hasError = true;
+        } else { clearFieldError('email'); }
+      } else {
+        if (!isValidEmail(email)) {
+          showFieldError('email', '請輸入正確 Email 格式');
+          hasError = true;
+        } else { clearFieldError('email'); }
+      }
 
       if (!document.getElementById('jobFunction').value) {
         showFieldError('jobFuncCarousel', '請滑動選擇您的職能');
         hasError = true;
       } else { clearFieldError('jobFuncCarousel'); }
+
+      if (isFieldRequired('company') && !document.getElementById('company').value.trim()) {
+        showFieldError('company', '請輸入公司名稱');
+        hasError = true;
+      } else { clearFieldError('company'); }
+
+      if (isFieldRequired('title') && !document.getElementById('title').value.trim()) {
+        showFieldError('title', '請輸入職稱');
+        hasError = true;
+      } else { clearFieldError('title'); }
 
       const jobTypes = getSelectedChips('jobTypes');
       if (jobTypes.length === 0) {
@@ -472,7 +707,6 @@
 
       if (hasError) return;
 
-      // Dedup protection
       if (isSubmitting) return;
       isSubmitting = true;
 
@@ -482,7 +716,7 @@
 
       const data = {
         source: 'liff-candidate-form',
-        formId: `CF-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+        formId: 'CF-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
         lineUserId: lineProfile ? lineProfile.userId : '',
         lineDisplayName: lineProfile ? lineProfile.displayName : '',
         linePicture: lineProfile ? lineProfile.pictureUrl : '',
@@ -501,13 +735,13 @@
         submittedAt: new Date().toISOString()
       };
 
-        // Add booking info if date/time selected
-        data.hasBooking = !!(selectedDate && selectedTime);
-        if (data.hasBooking) {
-          data.bookingDate = selectedDate;
-          data.bookingTime = selectedTime;
-          data.bookingTopic = document.getElementById('bookingTopic').value;
-        }
+      // Add booking info if date/time selected
+      data.hasBooking = !!(selectedDate && selectedTime);
+      if (data.hasBooking) {
+        data.bookingDate = selectedDate;
+        data.bookingTime = selectedTime;
+        data.bookingTopic = document.getElementById('bookingTopic').value;
+      }
 
       try {
         const resp = await fetch(WEBHOOK_URL, {
@@ -515,7 +749,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         let successText = '我們的顧問會在 1-2 個工作天內與您聯繫，為您推薦最適合的職缺。';
         if (data.hasBooking) {
           successText = '您已預約 ' + selectedDate + ' ' + selectedTime + ' 的諮詢，若預約成功，我們會透過 LINE 發送確認訊息給您並提醒。';
@@ -526,7 +760,7 @@
         console.error('Form submit error:', err);
         alert('送出失敗，請檢查網路連線後再試一次');
         btn.disabled = false;
-        btn.textContent = '送出資料';
+        btn.textContent = formConfig && formConfig.meta && formConfig.meta.submitBtnText ? formConfig.meta.submitBtnText : '送出資料';
         isSubmitting = false;
       }
     });
@@ -539,8 +773,28 @@
       }
     }
 
-    generateDates();
-    initLiff().then(() => loadBookedSlots());
+    // === INIT: Load config, then LIFF, then calendar ===
+    async function init() {
+      // 1. Load form config from API
+      const loaded = await loadFormConfig();
+      if (loaded) {
+        applyFormConfig();
+      } else {
+        applyFallbackConfig();
+      }
+
+      // 2. Show form, hide loading
+      document.getElementById('initLoading').classList.add('hidden');
+      document.getElementById('formWrapper').classList.remove('hidden');
+
+      // 3. Generate calendar dates
+      generateDates();
+
+      // 4. Init LIFF (async — don't block form)
+      initLiff().then(() => loadBookedSlots());
+    }
+
+    init();
   </script>
 </body>
 </html>
