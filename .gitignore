@@ -1,0 +1,19 @@
+# Environment & secrets
+.env
+.env.*
+*.secret
+secrets.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Build artifacts
+dist/
+build/
+node_modules/
